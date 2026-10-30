@@ -4,20 +4,17 @@ A 3D alien head that copies your face. Turn on your webcam and it blinks, smiles
 
 It also **talks** in a high-pitched voice: it greets you, reacts out loud to your expressions ("Ooh, a smile!"), and says anything you type into the box. Its mouth moves with the words.
 
-And it **listens**: its name is **Bob**. Turn on **🎤 Listen**, say "Bob", wait for the chirp (or say it all at once: "Bob, what's the biggest planet?"), and Bob answers out loud using Claude. You can also type a question and press **Ask Bob**.
+Its name is **Bob**, and you can **ask it anything**: type a question, press **Ask Bob**, and Bob answers out loud using Claude.
 
 No camera? It runs a demo of its expressions and follows your mouse.
 
-## Talking to Bob
+## Asking Bob
 
 1. Click **⚙ Settings** and, under **Bob's brain (Claude)**, paste a Claude API key from console.anthropic.com and press **Save key**. It is saved only in your browser and sent only to Anthropic; answers use your Anthropic credits. Without a key, Bob only knows the time, the date and a few jokes.
-2. Click **🎤 Listen** and allow the microphone. A panel shows your microphone's name and a live waveform of what it hears, so you can see it working; the antennae glow brighter when you speak.
-3. Say **"Bob"** (or "hey Bob"). The mic panel shows what it hears, with "Bob" highlighted. It chirps, its antennae turn green and it looks at you attentively. Ask your question. Its antennae turn purple while it thinks, then it answers with its voice. What you said and what it answered show in the caption. After it answers, it keeps listening for about 8 seconds, so you can ask a follow-up without saying "Bob" again.
+2. Type your question in the box at the bottom and press **Ask Bob** (or Enter). Its antennae turn purple while it thinks, then it answers with its voice. Your question and its answer show in the caption. **Say it** just makes Bob read out what you typed.
 
 - Bob answers with Claude Opus 5.5 (`claude-opus-5-5`, low effort for quick replies), in short spoken sentences, in the character you picked (squeaky, warrior or robot). It remembers the conversation until you press **New conversation**.
 - If Claude's safety filter declines a question, a fallback model answers instead (server-side fallback is turned on); if that also declines, Bob says it can't help with that.
-- While Bob talks, it ignores the microphone so it doesn't hear itself.
-- Listening uses the browser's speech recognition (Chrome, Edge, Safari; not Firefox). In Chrome that sends microphone audio to Google's speech service while Listen is on. Turn Listen off when you're done.
 
 ## Run it
 
@@ -68,8 +65,6 @@ css/style.css         styles
 js/alien-head.js      the 3D alien and its expressions
 js/face-tracker.js    webcam + MediaPipe face tracking
 js/voice.js           the alien's voice (ElevenLabs or browser speech) and lip sync
-js/listener.js        microphone listening and the "Bob" wake word
 js/brain.js           Bob's answers (Claude, via the Anthropic SDK in the browser)
-js/mic-meter.js       live microphone waveform and level meter while listening
 js/main.js            scene, demo mode, face-to-alien mapping, reactions
 ```

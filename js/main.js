@@ -149,10 +149,6 @@
   }
 
   // ---------- Mood ----------
-  const MOODS = {
-    neutral: '😐 Neutral', happy: '😄 Happy', surprised: '😲 Surprised', angry: '😠 Grumpy',
-    sad: '😢 Sad', kissy: '😘 Kissy', wink: '😉 Wink', puffed: '🐡 Puffed up'
-  };
   function moodOf(e) {
     const smile = ((e.smileL || 0) + (e.smileR || 0)) / 2;
     const frown = ((e.frownL || 0) + (e.frownR || 0)) / 2;
@@ -173,7 +169,6 @@
   let lastFaceAt = -10;
   let faceTarget = null;
   let mood = '';
-  let moodLabel = '';
   let forced = null; // test hook: AlienMirror.force({ smileL: 1, ... })
 
   function status(text) { $('status').textContent = text; }
@@ -270,7 +265,7 @@
 
   // Say something about a new expression once it has been held for a moment.
   function maybeReact(m, time, seeing) {
-    if (!seeing || !vs.enabled || listener.state === 'awake' || listener.state === 'busy' || time - lastTalkAt < 12) return;
+    if (!seeing || !vs.enabled || convo === 'thinking' || time - lastTalkAt < 12) return;
     if (!greeted) { greeted = true; lastReactAt = time; voice.speak(pick(lines().greet)); return; }
     if (m !== reactMood) { reactMood = m; reactSince = time; return; }
     if (!vs.reactions || m === 'neutral' || voice.speaking()) return;
@@ -379,10 +374,10 @@
     if (match) $('vVoice').value = match.value;
     $('vStatus').textContent = (match ? 'Voice: ' + match.text.split(' - ')[0] + '. ' : '') + 'Press Test voice!';
   });
-  // ---------- Talking with Bob (microphone + Claude) ----------
+  // ---------- Asking Bob (typed questions, answered by Claude) ----------
   const brain = window.AlienBrain;
   let lastTalkAt = -100; // pause face reactions during and right after a conversation
-  let convo = 'off';     // listener state, mirrored for the face
+  let convo = 'off';     // 'thinking' while Bob works on an answer
 
   function caption(you, bob) {
     if (you !== undefined) $('capYou').textContent = you;
@@ -396,111 +391,22 @@
     while (voice.speaking() && performance.now() - start < 90000) await new Promise((r) => setTimeout(r, 200));
   }
 
-  /** Ask Bob something (spoken or typed) and say the answer. */
+  /** Ask Bob something and say the answer. */
   async function askBob(text) {
     lastTalkAt = performance.now() / 1000;
     convo = 'thinking';
+    $('askBtn').disabled = true;
     caption(text, '…');
     status('Bob is thinking…');
     const res = await brain.ask(text, vs.preset);
-    convo = listener.state === 'off' ? 'off' : 'answering';
+    convo = 'off';
+    $('askBtn').disabled = false;
     caption(undefined, res.text);
     alien.setMood(res.mood || 'happy');
-    status(res.error ? res.text : listener.state === 'off' ? 'Ask another question, or turn on Listen and say "Bob".' : 'Bob is answering…');
+    status(res.error ? res.text : 'Type another question for Bob.');
     voice.speak(res.text);
     await waitForSpeech();
     lastTalkAt = performance.now() / 1000;
-    convo = listener.state === 'off' ? 'off' : 'waiting';
-    answered = true;
-  }
-
-  // Bob's own voice must not count as you talking: ignore the mic while it
-  // speaks and for a moment after (the recognizer lags behind the audio)
-  let speakingUntil = 0;
-  let answered = false; // the next 'awake' is a follow-up window after an answer
-  function bobSpeaking() {
-    if (voice.speaking()) speakingUntil = performance.now() + 1200;
-    return performance.now() < speakingUntil;
-  }
-
-  // Show what speech recognition hears, with the wake word highlighted
-  function showHeard(text, isFinal) {
-    const el = $('micHeard');
-    el.textContent = '';
-    el.append(isFinal ? 'Heard: ' : 'Hearing: ');
-    const m = window.AlienListener.WAKE.exec(text);
-    const b = document.createElement('b');
-    if (m) {
-      const mark = document.createElement('mark');
-      mark.textContent = text.slice(m.index, m.index + m[0].length).trim();
-      b.append(text.slice(0, m.index), mark, ' ' + text.slice(m.index + m[0].length));
-    } else {
-      b.textContent = text;
-    }
-    el.append(b);
-  }
-
-  const listener = new window.AlienListener({
-    isSpeaking: bobSpeaking,
-    onState(s) {
-      if (s !== 'busy') convo = s === 'awake' ? 'listening' : s;
-      $('listenBtn').textContent = s === 'off' ? '🎤 Listen: off' : '🎤 Listen: on';
-      $('listenBtn').classList.toggle('on', s !== 'off');
-      $('listenBtn').classList.toggle('awake', s === 'awake');
-      $('listenBtn').setAttribute('aria-pressed', String(s !== 'off'));
-      if (s === 'waiting') { status('Listening for "Bob"…'); answered = false; }
-      if (s === 'awake') {
-        status(answered ? 'Ask a follow-up question (no need to say "Bob"), or wait a few seconds.' : 'Bob is listening. Ask your question!');
-        voice.stop();
-      }
-      if (s === 'off') { status('Listening is off.'); answered = false; if (meter.running) meter.stop(); }
-      showMic(s);
-    },
-    onHeard(text, isFinal) { if (listener.state === 'awake' || isFinal) caption(text, isFinal ? undefined : ''); },
-    onRaw: showHeard,
-    onPrompt: askBob,
-    onError(msg) { status(msg); $('micHeard').textContent = '⚠ ' + msg; }
-  });
-
-  // Live microphone waveform while listening
-  const meter = new window.AlienMicMeter($('micWave'));
-  const MIC_STATE = { waiting: 'Listening for "Bob"', awake: 'Bob is listening to you', busy: 'Bob is thinking…' };
-  function showMic(s) {
-    meter.state = s;
-    $('micPanel').classList.toggle('hidden', s === 'off');
-    $('micPanel').classList.toggle('awake', s === 'awake');
-    $('micPanel').classList.toggle('busy', s === 'busy');
-    if (MIC_STATE[s]) $('micState').textContent = s === 'awake' && answered ? 'Listening for a follow-up' : MIC_STATE[s];
-  }
-
-  async function startListening() {
-    // Start recognition right away, inside the click, then open the mic for the waveform
-    listener.start();
-    $('micHeard').textContent = 'Say "Bob"…';
-    showMic(listener.state);
-    try {
-      await meter.start(); // asks for microphone permission
-      $('micName').textContent = '🎤 ' + meter.deviceName;
-      $('micName').title = meter.deviceName;
-    } catch (e) {
-      status(e && e.name === 'NotAllowedError' ? 'Microphone blocked. Allow microphone access in the address bar, then try again.'
-        : e && e.name === 'NotFoundError' ? 'No microphone found.' : 'Could not open the microphone: ' + ((e && e.message) || e));
-      if (e && (e.name === 'NotAllowedError' || e.name === 'NotFoundError')) stopListening();
-    }
-  }
-  function stopListening() {
-    listener.stop();
-    meter.stop();
-    showMic('off');
-  }
-
-  $('listenBtn').addEventListener('click', () => {
-    if (listener.state === 'off') startListening();
-    else stopListening();
-  });
-  if (!window.AlienListener.supported) {
-    $('listenBtn').disabled = true;
-    $('listenBtn').title = "This browser can't do speech recognition. Try Chrome or Edge.";
   }
 
   // Typed: "Ask Bob" asks the AI, "Say it" just speaks the words
@@ -550,17 +456,15 @@
 
     const m = moodOf(target);
     if (m !== mood) { mood = m; alien.setMood(m); }
-    const label = (seeing ? '' : tracker.running ? 'Looking for you… ' : 'Demo: ') + MOODS[m];
-    if (label !== moodLabel) { moodLabel = label; $('mood').textContent = label; }
     maybeReact(m, time, seeing);
 
-    // Attentive face while listening for a question, thoughtful face while thinking
-    if (convo === 'listening' || convo === 'thinking') {
-      alien.setMood(convo);
-      mood = convo;
-      target = Object.assign({}, target, convo === 'listening'
-        ? { wideL: 0.6, wideR: 0.6, browInnerUp: 0.45, browOuterL: 0.4, browOuterR: 0.4, smileL: 0.2, smileR: 0.2 }
-        : { gazeX: 0.5 + Math.sin(time * 1.3) * 0.15, gazeY: 0.7, browInnerUp: 0.35, pucker: 0.35, roll: (target.roll || 0) + 0.12 });
+    // Thoughtful face while Bob works on an answer
+    if (convo === 'thinking') {
+      alien.setMood('thinking');
+      mood = 'thinking';
+      target = Object.assign({}, target, {
+        gazeX: 0.5 + Math.sin(time * 1.3) * 0.15, gazeY: 0.7, browInnerUp: 0.35, pucker: 0.35, roll: (target.roll || 0) + 0.12
+      });
     }
 
     // Move the mouth with the voice (on top of whatever the face is doing)
@@ -573,7 +477,6 @@
       });
     }
 
-    alien.listenLevel = meter.running && !voice.speaking() ? meter.level : 0; // antennae glow with your voice
     alien.update(target, dt, time);
     renderer.render(scene, camera);
     requestAnimationFrame(loop);
@@ -582,7 +485,7 @@
 
   // Small hook for testing from the console
   window.AlienMirror = {
-    alien, tracker, fromFace, DEMO, listener, askBob,
+    alien, tracker, fromFace, DEMO, askBob,
     force(e) { forced = e || null; },
     get mirror() { return mirror; }
   };

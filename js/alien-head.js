@@ -259,9 +259,7 @@
         a.pivot.rotation.z = -a.side * (0.32 + (e.browInnerUp + e.wideL + e.wideR) * 0.08) + a.oz;
         a.pivot.rotation.x = -0.12 + a.ox;
         a.glow.material.color.copy(this.tipColor);
-        const hear = this.listenLevel || 0; // set while the microphone is listening
-        a.glow.material.opacity = Math.min(1, 0.55 + Math.sin(time * 4 + a.side) * 0.15 + hear * 0.6);
-        a.glow.scale.setScalar(0.7 * (1 + hear * 0.7));
+        a.glow.material.opacity = 0.55 + Math.sin(time * 4 + a.side) * 0.15;
       });
     }
 
