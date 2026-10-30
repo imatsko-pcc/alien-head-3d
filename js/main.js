@@ -228,7 +228,7 @@
   const voice = window.AlienVoice;
   const vs = voice.settings;
   const LINES = {
-    greet: ["Greetings, Earthling! Make a face and I'll copy it.", 'Oh, hello there! I can see you now. Let us make faces together!'],
+    greet: ["Greetings, Earthling! I'm Zorb. Make a face and I'll copy it.", 'Oh, hello there! I can see you now. I am Zorb. Let us make faces together!'],
     happy: ["Ooh, a smile! Earthlings are adorable when they're happy.", 'That smile could power a whole starship!', 'Happy face detected. My antennae are glowing!'],
     surprised: ['Whoa! What did you see? A comet?', "Surprised? Me too. I'm always surprised.", 'Eyebrows up, mouth open. Classic Earthling shock!'],
     angry: ['Uh oh, grumpy face. Did someone steal your space snacks?', 'Easy there, Earthling. Deep breaths.', 'Such a fierce frown! I am trembling in my antennae.'],
@@ -240,7 +240,7 @@
   // The warrior sprinkles in a little Klingon: nuqneH ("what do you want?", the
   // usual greeting) and Qapla' ("success!").
   const WARRIOR_LINES = {
-    greet: ['nuqneH! I see you, Earthling. Show me your warrior face!', 'Greetings, Earthling. Today is a glorious day to make faces!'],
+    greet: ['nuqneH! I am Zorb, and I see you, Earthling. Show me your warrior face!', 'Greetings, Earthling. I am Zorb. Today is a glorious day to make faces!'],
     happy: ["Qapla'! Your smile brings honor to your house!", "A warrior's grin! Glorious!"],
     surprised: ['You look startled, Earthling. A warrior fears nothing!', 'What is it? An enemy ship? Raise the shields!'],
     angry: ['Yes! That is the face of a true warrior!', "Magnificent fury! Qapla'!"],
@@ -270,7 +270,7 @@
 
   // Say something about a new expression once it has been held for a moment.
   function maybeReact(m, time, seeing) {
-    if (!seeing || !vs.enabled) return;
+    if (!seeing || !vs.enabled || listener.state === 'awake' || listener.state === 'busy' || time - lastTalkAt < 12) return;
     if (!greeted) { greeted = true; lastReactAt = time; voice.speak(pick(lines().greet)); return; }
     if (m !== reactMood) { reactMood = m; reactSince = time; return; }
     if (!vs.reactions || m === 'neutral' || voice.speaking()) return;
@@ -379,11 +379,94 @@
     if (match) $('vVoice').value = match.value;
     $('vStatus').textContent = (match ? 'Voice: ' + match.text.split(' - ')[0] + '. ' : '') + 'Press Test voice!';
   });
+  // ---------- Talking with Zorb (microphone + Claude) ----------
+  const brain = window.AlienBrain;
+  let lastTalkAt = -100; // pause face reactions during and right after a conversation
+  let convo = 'off';     // listener state, mirrored for the face
+
+  function caption(you, zorb) {
+    $('caption').classList.remove('hidden');
+    if (you !== undefined) $('capYou').textContent = you;
+    if (zorb !== undefined) $('capZorb').textContent = zorb;
+  }
+
+  async function waitForSpeech() {
+    const start = performance.now();
+    await new Promise((r) => setTimeout(r, 300));
+    while (voice.speaking() && performance.now() - start < 90000) await new Promise((r) => setTimeout(r, 200));
+  }
+
+  /** Ask Zorb something (spoken or typed) and say the answer. */
+  async function askZorb(text) {
+    lastTalkAt = performance.now() / 1000;
+    convo = 'thinking';
+    caption(text, '…');
+    status('Zorb is thinking…');
+    const res = await brain.ask(text, vs.preset);
+    convo = listener.state === 'off' ? 'off' : 'answering';
+    caption(undefined, res.text);
+    alien.setMood(res.mood || 'happy');
+    status(res.error ? res.text : listener.state === 'off' ? 'Ask another question, or turn on Listen and say "Zorb".' : 'Say "Zorb" to ask another question.');
+    voice.speak(res.text);
+    await waitForSpeech();
+    lastTalkAt = performance.now() / 1000;
+    convo = listener.state === 'off' ? 'off' : 'waiting';
+  }
+
+  const listener = new window.AlienListener({
+    isSpeaking: () => voice.speaking(),
+    onState(s) {
+      if (s !== 'busy') convo = s === 'awake' ? 'listening' : s;
+      $('listenBtn').textContent = s === 'off' ? '🎤 Listen: off' : '🎤 Listen: on';
+      $('listenBtn').classList.toggle('on', s !== 'off');
+      $('listenBtn').classList.toggle('awake', s === 'awake');
+      $('listenBtn').setAttribute('aria-pressed', String(s !== 'off'));
+      if (s === 'waiting') status('Listening for "Zorb"…');
+      if (s === 'awake') { status('Zorb is listening. Ask your question!'); caption('', ''); voice.stop(); }
+      if (s === 'off') status('Listening is off.');
+    },
+    onHeard(text, isFinal) { if (listener.state === 'awake' || isFinal) caption(text, undefined); },
+    onPrompt: askZorb,
+    onError(msg) { status(msg); }
+  });
+
+  $('listenBtn').addEventListener('click', () => {
+    if (listener.state === 'off') listener.start();
+    else listener.stop();
+  });
+  if (!window.AlienListener.supported) {
+    $('listenBtn').disabled = true;
+    $('listenBtn').title = "This browser can't do speech recognition. Try Chrome or Edge.";
+  }
+
+  // Typed: "Ask Zorb" asks the AI, "Say it" just speaks the words
   $('sayForm').addEventListener('submit', (ev) => {
     ev.preventDefault();
     const text = $('sayText').value.trim();
+    if (text) askZorb(text);
+  });
+  $('sayBtn').addEventListener('click', () => {
+    const text = $('sayText').value.trim();
     if (text) voice.speak(text, true);
   });
+
+  // Claude key for Zorb's brain
+  function saveBrainKey() {
+    const k = $('bKey').value.replace(/[\s"'`]/g, '');
+    $('bKey').value = k;
+    brain.settings.apiKey = k;
+    brain.save();
+    brain.reset();
+    $('bStatus').textContent = !k ? 'Key removed. Zorb only knows built-in answers now.'
+      : /^sk-ant-/.test(k) ? 'Key saved. Ask Zorb something to try it!'
+        : 'Saved, but Claude keys usually start with "sk-ant-". Check you copied the whole key.';
+  }
+  $('bKey').addEventListener('change', saveBrainKey);
+  $('bKey').addEventListener('paste', () => setTimeout(saveBrainKey, 0));
+  $('bKey').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); saveBrainKey(); } });
+  $('bKeySave').addEventListener('click', saveBrainKey);
+  $('bNew').addEventListener('click', () => { brain.reset(); $('bStatus').textContent = 'Started a new conversation.'; });
+  $('voiceBtn').addEventListener('click', () => { $('bKey').value = brain.settings.apiKey; });
   renderVoice();
 
   // ---------- Loop ----------
@@ -407,6 +490,15 @@
     if (label !== moodLabel) { moodLabel = label; $('mood').textContent = label; }
     maybeReact(m, time, seeing);
 
+    // Attentive face while listening for a question, thoughtful face while thinking
+    if (convo === 'listening' || convo === 'thinking') {
+      alien.setMood(convo);
+      mood = convo;
+      target = Object.assign({}, target, convo === 'listening'
+        ? { wideL: 0.6, wideR: 0.6, browInnerUp: 0.45, browOuterL: 0.4, browOuterR: 0.4, smileL: 0.2, smileR: 0.2 }
+        : { gazeX: 0.5 + Math.sin(time * 1.3) * 0.15, gazeY: 0.7, browInnerUp: 0.35, pucker: 0.35, roll: (target.roll || 0) + 0.12 });
+    }
+
     // Move the mouth with the voice (on top of whatever the face is doing)
     const talk = voice.level(time);
     if (talk > 0) {
@@ -425,7 +517,7 @@
 
   // Small hook for testing from the console
   window.AlienMirror = {
-    alien, tracker, fromFace, DEMO,
+    alien, tracker, fromFace, DEMO, listener, askZorb,
     force(e) { forced = e || null; },
     get mirror() { return mirror; }
   };

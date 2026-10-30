@@ -96,7 +96,17 @@ html, body {
 }
 .hidden { display: none; }
 
-.say { flex-wrap: nowrap; width: min(520px, 100%); }
+.say { flex-wrap: nowrap; width: min(560px, 100%); }
+.caption { flex-direction: column; flex-wrap: nowrap; gap: 4px; width: min(560px, 100%); padding: 8px 14px; text-align: left; font-size: 14px; }
+.caption.hidden { display: none; }
+.caption p { margin: 0; }
+.cap-you { color: var(--muted); }
+.cap-you:not(:empty)::before { content: 'You: '; color: #67e8f9; font-weight: 600; }
+.cap-zorb:not(:empty)::before { content: 'Zorb: '; color: var(--green); font-weight: 600; }
+#listenBtn.on { color: #052e16; background: linear-gradient(90deg, #4ade80, #22d3ee); border: none; }
+#listenBtn.awake { animation: listenPulse 0.9s infinite; }
+@keyframes listenPulse { 50% { box-shadow: 0 0 18px rgba(74, 222, 128, 0.9); } }
+.vp-sub { margin-top: 8px; padding-top: 10px; border-top: 1px solid #334155; }
 .say input {
   flex: 1;
   min-width: 0;

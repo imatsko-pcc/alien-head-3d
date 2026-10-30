@@ -24,7 +24,8 @@
 
   const MOOD_COLORS = {
     neutral: 0x22d3ee, happy: 0xfacc15, surprised: 0xf472b6, angry: 0xf43f5e,
-    sad: 0x60a5fa, kissy: 0xfb7185, wink: 0xa3e635, puffed: 0xfb923c
+    sad: 0x60a5fa, kissy: 0xfb7185, wink: 0xa3e635, puffed: 0xfb923c,
+    listening: 0x4ade80, thinking: 0xa855f7
   };
 
   let glowTex = null;
