@@ -107,6 +107,9 @@ html, body {
 .mic.busy .mic-state { color: #c084fc; }
 .mic-name { margin-left: auto; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .mic-wave { display: block; width: 100%; height: 56px; }
+.mic-heard { margin: 0; font-size: 13px; color: var(--muted); min-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mic-heard b { color: #e2e8f0; font-weight: 600; }
+.mic-heard mark { background: rgba(74, 222, 128, 0.25); color: var(--green); border-radius: 4px; padding: 0 3px; }
 .caption { flex-direction: column; flex-wrap: nowrap; gap: 4px; width: min(560px, 100%); padding: 8px 14px; text-align: left; font-size: 14px; }
 .caption.hidden { display: none; }
 .caption p { margin: 0; }

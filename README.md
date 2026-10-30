@@ -12,7 +12,7 @@ No camera? It runs a demo of its expressions and follows your mouse.
 
 1. Click **⚙ Settings** and, under **Bob's brain (Claude)**, paste a Claude API key from console.anthropic.com and press **Save key**. It is saved only in your browser and sent only to Anthropic; answers use your Anthropic credits. Without a key, Bob only knows the time, the date and a few jokes.
 2. Click **🎤 Listen** and allow the microphone. A panel shows your microphone's name and a live waveform of what it hears, so you can see it working; the antennae glow brighter when you speak.
-3. Say **"Bob"**. It chirps, its antennae turn green and it looks at you attentively. Ask your question. Its antennae turn purple while it thinks, then it answers with its voice. What you said and what it answered show in the caption.
+3. Say **"Bob"** (or "hey Bob"). The mic panel shows what it hears, with "Bob" highlighted. It chirps, its antennae turn green and it looks at you attentively. Ask your question. Its antennae turn purple while it thinks, then it answers with its voice. What you said and what it answered show in the caption. After it answers, it keeps listening for about 8 seconds, so you can ask a follow-up without saying "Bob" again.
 
 - Bob answers with Claude Opus 5.5 (`claude-opus-5-5`, low effort for quick replies), in short spoken sentences, in the character you picked (squeaky, warrior or robot). It remembers the conversation until you press **New conversation**.
 - If Claude's safety filter declines a question, a fallback model answers instead (server-side fallback is turned on); if that also declines, Bob says it can't help with that.

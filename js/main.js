@@ -406,29 +406,60 @@
     convo = listener.state === 'off' ? 'off' : 'answering';
     caption(undefined, res.text);
     alien.setMood(res.mood || 'happy');
-    status(res.error ? res.text : listener.state === 'off' ? 'Ask another question, or turn on Listen and say "Bob".' : 'Say "Bob" to ask another question.');
+    status(res.error ? res.text : listener.state === 'off' ? 'Ask another question, or turn on Listen and say "Bob".' : 'Bob is answering…');
     voice.speak(res.text);
     await waitForSpeech();
     lastTalkAt = performance.now() / 1000;
     convo = listener.state === 'off' ? 'off' : 'waiting';
+    answered = true;
+  }
+
+  // Bob's own voice must not count as you talking: ignore the mic while it
+  // speaks and for a moment after (the recognizer lags behind the audio)
+  let speakingUntil = 0;
+  let answered = false; // the next 'awake' is a follow-up window after an answer
+  function bobSpeaking() {
+    if (voice.speaking()) speakingUntil = performance.now() + 1200;
+    return performance.now() < speakingUntil;
+  }
+
+  // Show what speech recognition hears, with the wake word highlighted
+  function showHeard(text, isFinal) {
+    const el = $('micHeard');
+    el.textContent = '';
+    el.append(isFinal ? 'Heard: ' : 'Hearing: ');
+    const m = window.AlienListener.WAKE.exec(text);
+    const b = document.createElement('b');
+    if (m) {
+      const mark = document.createElement('mark');
+      mark.textContent = text.slice(m.index, m.index + m[0].length).trim();
+      b.append(text.slice(0, m.index), mark, ' ' + text.slice(m.index + m[0].length));
+    } else {
+      b.textContent = text;
+    }
+    el.append(b);
   }
 
   const listener = new window.AlienListener({
-    isSpeaking: () => voice.speaking(),
+    isSpeaking: bobSpeaking,
     onState(s) {
       if (s !== 'busy') convo = s === 'awake' ? 'listening' : s;
       $('listenBtn').textContent = s === 'off' ? '🎤 Listen: off' : '🎤 Listen: on';
       $('listenBtn').classList.toggle('on', s !== 'off');
       $('listenBtn').classList.toggle('awake', s === 'awake');
       $('listenBtn').setAttribute('aria-pressed', String(s !== 'off'));
-      if (s === 'waiting') status('Listening for "Bob"…');
-      if (s === 'awake') { status('Bob is listening. Ask your question!'); caption('', ''); voice.stop(); }
-      if (s === 'off') { status('Listening is off.'); if (meter.running) meter.stop(); }
+      if (s === 'waiting') { status('Listening for "Bob"…'); answered = false; }
+      if (s === 'awake') {
+        status(answered ? 'Ask a follow-up question (no need to say "Bob"), or wait a few seconds.' : 'Bob is listening. Ask your question!');
+        voice.stop();
+      }
+      if (s === 'off') { status('Listening is off.'); answered = false; if (meter.running) meter.stop(); }
       showMic(s);
     },
-    onHeard(text, isFinal) { if (listener.state === 'awake' || isFinal) caption(text, undefined); },
+    onHeard(text, isFinal) { if (listener.state === 'awake' || isFinal) caption(text, isFinal ? undefined : ''); },
+    onRaw: showHeard,
     onPrompt: askBob,
-    onError(msg) { status(msg); }
+    onError(msg) { status(msg); $('micHeard').textContent = '⚠ ' + msg; }
   });
 
   // Live microphone waveform while listening
@@ -439,10 +470,14 @@
     $('micPanel').classList.toggle('hidden', s === 'off');
     $('micPanel').classList.toggle('awake', s === 'awake');
     $('micPanel').classList.toggle('busy', s === 'busy');
-    if (MIC_STATE[s]) $('micState').textContent = MIC_STATE[s];
+    if (MIC_STATE[s]) $('micState').textContent = s === 'awake' && answered ? 'Listening for a follow-up' : MIC_STATE[s];
   }
 
   async function startListening() {
+    // Start recognition right away, inside the click, then open the mic for the waveform
+    listener.start();
+    $('micHeard').textContent = 'Say "Bob"…';
+    showMic(listener.state);
     try {
       await meter.start(); // asks for microphone permission
       $('micName').textContent = '🎤 ' + meter.deviceName;
@@ -450,10 +485,8 @@
     } catch (e) {
       status(e && e.name === 'NotAllowedError' ? 'Microphone blocked. Allow microphone access in the address bar, then try again.'
         : e && e.name === 'NotFoundError' ? 'No microphone found.' : 'Could not open the microphone: ' + ((e && e.message) || e));
-      return;
+      if (e && (e.name === 'NotAllowedError' || e.name === 'NotFoundError')) stopListening();
     }
-    listener.start();
-    showMic(listener.state);
   }
   function stopListening() {
     listener.stop();

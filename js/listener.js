@@ -39,8 +39,10 @@
   class Listener {
     /**
      * opts: onState(state), onHeard(text, isFinal), onPrompt(text) -> Promise,
-     *       onError(message), isSpeaking() -> bool
-     * States: 'off', 'waiting' (for "Bob"), 'awake' (for a prompt), 'busy' (answering)
+     *       onError(message), isSpeaking() -> bool,
+     *       onRaw(text, isFinal) (optional: everything recognized, for display)
+     * States: 'off', 'waiting' (for "Bob"), 'awake' (for a prompt or a
+     * follow-up after an answer), 'busy' (answering)
      */
     constructor(opts) {
       this.opts = opts;
@@ -87,6 +89,8 @@
           this.opts.onError('No microphone found.');
         } else if (ev.error === 'network') {
           this.opts.onError("Speech recognition can't reach its server. Check your internet connection.");
+        } else if (ev.error !== 'no-speech' && ev.error !== 'aborted') {
+          this.opts.onError('Speech recognition problem: ' + ev.error);
         }
         // 'no-speech' and 'aborted' are normal; onend restarts
       };
@@ -96,6 +100,11 @@
       try { rec.start(); } catch (e) { /* already started */ }
     }
 
+    // Throw away audio the recognizer may still be holding (e.g. Bob's own voice)
+    flush() {
+      if (this.rec) { try { this.rec.abort(); } catch (e) { /* already stopped */ } } // onend restarts it
+    }
+
     handle(ev) {
       if (this.state === 'busy' || this.opts.isSpeaking()) return; // don't hear our own voice
       for (let i = ev.resultIndex; i < ev.results.length; i++) {
@@ -103,6 +112,7 @@
         const text = res[0].transcript.trim();
         if (!text) continue;
         const final = res.isFinal;
+        if (this.opts.onRaw) this.opts.onRaw(text, final);
         const wake = WAKE.exec(text);
         if (this.state === 'waiting') {
           if (!wake) continue;
@@ -122,10 +132,16 @@
     async answer(prompt) {
       this.setState('busy');
       try { await this.opts.onPrompt(prompt); } finally {
-        if (this.state === 'busy') this.setState('waiting');
+        if (this.state === 'busy') {
+          // Keep listening for a follow-up without needing "Bob" again
+          this.flush();
+          chirp(true);
+          this.setState('awake');
+        }
       }
     }
   }
 
+  Listener.WAKE = WAKE;
   window.AlienListener = Listener;
 })();
