@@ -21,6 +21,11 @@
  *   idle       the player has been sitting still
  * Three or more crashes in a row (until the next mission or victory) play a "streak" line.
  *
+ * Control messages: 'unlock' (the player clicked in the game, so sound may
+ * play; a line blocked before that is replayed) and 'mute' { muted: true|false }.
+ * Inside an iframe Bob posts { type: 'bob-ready' }, { type: 'bob-line', text, group, file }
+ * and { type: 'bob-done' } to the parent page, so the game can show its own subtitles.
+ *
  * Page options: ?transparent=1 (no background, for overlaying) and ?subtitles=0.
  */
 (function () {
@@ -120,7 +125,7 @@
     return actx;
   }
   // Browsers only allow sound after the person has clicked or pressed a key
-  ['pointerdown', 'keydown', 'touchstart'].forEach((ev) => window.addEventListener(ev, audioContext, { passive: true }));
+  ['pointerdown', 'keydown', 'touchstart'].forEach((ev) => window.addEventListener(ev, () => unlock(), { passive: true }));
 
   function pick(group) {
     const files = Object.keys(LINES[group] || {});
@@ -135,6 +140,13 @@
     if (current) { current.audio.pause(); current = null; }
   }
 
+  // When Bob is inside a game page, tell the game what he is saying (for its own subtitles)
+  const host = window.parent !== window ? window.parent : null;
+  function tellHost(msg) { if (host) host.postMessage(msg, '*'); }
+
+  let muted = false;
+  let pending = null; // a line the browser wouldn't play yet (no click so far); replayed on unlock
+
   /** Play a random line from a group (e.g. 'crash_moon', 'mission_3'). */
   function say(group) {
     const t = now();
@@ -142,27 +154,52 @@
     if (current && t < current.until && priorityOf(group) === 0) return false;
     const line = pick(group);
     if (!line) return false;
+    playLine(group, line);
+    return true;
+  }
+
+  function playLine(group, line) {
+    const t = now();
     stop();
+    pending = null;
     const audio = new Audio('audio/' + line.file + '.mp3');
     try { audioContext().createMediaElementSource(audio).connect(analyser); } catch (e) { /* plays without lip sync */ }
-    current = { audio, group, until: t + 15 };
+    current = { audio, group, until: t + Math.max(3, line.text.length * 0.07) };
     audio.addEventListener('loadedmetadata', () => { if (current && current.audio === audio) current.until = now() + audio.duration + 0.2; });
     audio.addEventListener('ended', () => {
       if (current && current.audio === audio) current = null;
       faceUntil = Math.min(faceUntil, now() + 0.8);
       subtitleUntil = Math.min(subtitleUntil, now() + 1.5);
+      tellHost({ type: 'bob-done' });
     });
-    audio.play().catch(() => { /* sound blocked until the first click; the face and subtitle still show */ });
+    if (!muted) {
+      audio.play().catch((e) => {
+        // Sound is blocked until the first click: keep the face and subtitle, replay the line on unlock
+        if (e && e.name === 'NotAllowedError') pending = { group, line, at: now() };
+      });
+    }
 
     face = FACES[faceFor(group)];
-    faceUntil = t + 12;
+    faceUntil = t + (muted ? Math.max(3, line.text.length * 0.07) : 12);
     alien.setMood(face.color);
     if (SUBTITLES) {
       subtitle.textContent = line.text;
       subtitle.classList.add('show');
       subtitleUntil = t + Math.max(3, line.text.length * 0.07) + 1;
     }
-    return true;
+    tellHost({ type: 'bob-line', group, file: line.file, text: line.text });
+  }
+
+  /** The player clicked somewhere: sound is allowed now, so say any line that was blocked. */
+  function unlock() {
+    audioContext();
+    if (pending && now() - pending.at < 20 && !muted) playLine(pending.group, pending.line);
+    pending = null;
+  }
+
+  function setMuted(m) {
+    muted = !!m;
+    if (muted && current) current.audio.pause();
   }
 
   // ---------- Game events ----------
@@ -205,6 +242,12 @@
         return say('idle');
       case 'reset':
         crashStreak = 0;
+        return true;
+      case 'unlock':
+        unlock();
+        return true;
+      case 'mute':
+        setMuted(detail.muted !== false);
         return true;
       default:
         return false;
@@ -269,7 +312,8 @@
   requestAnimationFrame(frame);
 
   window.AlienBob = {
-    event, say, stop, unlockAudio: audioContext, lines: LINES,
+    event, say, stop, unlock, lines: LINES,
     get speaking() { return !!(current && !current.audio.paused); }
   };
+  tellHost({ type: 'bob-ready' });
 })();
