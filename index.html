@@ -7,7 +7,7 @@
   <meta name="description" content="A 3D alien head that copies your facial expressions through your webcam.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=7">
+  <link rel="stylesheet" href="css/style.css?v=9">
 </head>
 <body>
   <canvas id="scene" aria-label="3D alien head"></canvas>
@@ -28,6 +28,14 @@
       <button id="listenBtn" class="btn" title="Listen on the microphone for &quot;Zorb&quot;" aria-pressed="false">🎤 Listen: off</button>
       <button id="muteBtn" class="btn" title="Alien voice on/off">🔊 Voice: on</button>
       <button id="voiceBtn" class="btn" title="Voice and AI settings">⚙ Settings</button>
+    </div>
+    <div id="micPanel" class="panel mic hidden">
+      <div class="mic-head">
+        <span class="mic-dot" aria-hidden="true"></span>
+        <span id="micState" class="mic-state">Listening for "Zorb"</span>
+        <span id="micName" class="mic-name"></span>
+      </div>
+      <canvas id="micWave" class="mic-wave" aria-label="Live microphone waveform" role="img"></canvas>
     </div>
     <div id="caption" class="panel caption hidden" aria-live="polite">
       <p id="capYou" class="cap-you"></p>
@@ -99,11 +107,12 @@
   </form>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-  <script src="js/alien-head.js?v=7"></script>
-  <script src="js/face-tracker.js?v=7"></script>
-  <script src="js/voice.js?v=7"></script>
-  <script src="js/brain.js?v=7"></script>
-  <script src="js/listener.js?v=7"></script>
-  <script src="js/main.js?v=7"></script>
+  <script src="js/alien-head.js?v=9"></script>
+  <script src="js/face-tracker.js?v=9"></script>
+  <script src="js/voice.js?v=9"></script>
+  <script src="js/brain.js?v=9"></script>
+  <script src="js/listener.js?v=9"></script>
+  <script src="js/mic-meter.js?v=9"></script>
+  <script src="js/main.js?v=9"></script>
 </body>
 </html>

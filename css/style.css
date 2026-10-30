@@ -97,6 +97,16 @@ html, body {
 .hidden { display: none; }
 
 .say { flex-wrap: nowrap; width: min(560px, 100%); }
+.mic { flex-direction: column; flex-wrap: nowrap; gap: 6px; width: min(560px, 100%); padding: 8px 12px; }
+.mic.hidden { display: none; }
+.mic-head { display: flex; align-items: center; gap: 8px; font-size: 12px; min-width: 0; }
+.mic-dot { width: 9px; height: 9px; flex: none; border-radius: 50%; background: #f43f5e; box-shadow: 0 0 8px #f43f5e; animation: micBlink 1.2s infinite; }
+@keyframes micBlink { 50% { opacity: 0.35; } }
+.mic-state { font-weight: 600; color: #67e8f9; white-space: nowrap; }
+.mic.awake .mic-state { color: var(--green); }
+.mic.busy .mic-state { color: #c084fc; }
+.mic-name { margin-left: auto; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.mic-wave { display: block; width: 100%; height: 56px; }
 .caption { flex-direction: column; flex-wrap: nowrap; gap: 4px; width: min(560px, 100%); padding: 8px 14px; text-align: left; font-size: 14px; }
 .caption.hidden { display: none; }
 .caption p { margin: 0; }

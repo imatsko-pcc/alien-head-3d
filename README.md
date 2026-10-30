@@ -11,7 +11,7 @@ No camera? It runs a demo of its expressions and follows your mouse.
 ## Talking to Zorb
 
 1. Click **⚙ Settings** and, under **Zorb's brain (Claude)**, paste a Claude API key from console.anthropic.com and press **Save key**. It is saved only in your browser and sent only to Anthropic; answers use your Anthropic credits. Without a key, Zorb only knows the time, the date and a few jokes.
-2. Click **🎤 Listen** and allow the microphone.
+2. Click **🎤 Listen** and allow the microphone. A panel shows your microphone's name and a live waveform of what it hears, so you can see it working; the antennae glow brighter when you speak.
 3. Say **"Zorb"**. It chirps, its antennae turn green and it looks at you attentively. Ask your question. Its antennae turn purple while it thinks, then it answers with its voice. What you said and what it answered show in the caption.
 
 - Zorb answers with Claude Opus 5.5 (`claude-opus-5-5`, low effort for quick replies), in short spoken sentences, in the character you picked (squeaky, warrior or robot). It remembers the conversation until you press **New conversation**.
@@ -70,5 +70,6 @@ js/face-tracker.js    webcam + MediaPipe face tracking
 js/voice.js           the alien's voice (ElevenLabs or browser speech) and lip sync
 js/listener.js        microphone listening and the "Zorb" wake word
 js/brain.js           Zorb's answers (Claude, via the Anthropic SDK in the browser)
+js/mic-meter.js       live microphone waveform and level meter while listening
 js/main.js            scene, demo mode, face-to-alien mapping, reactions
 ```

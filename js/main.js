@@ -385,9 +385,9 @@
   let convo = 'off';     // listener state, mirrored for the face
 
   function caption(you, zorb) {
-    $('caption').classList.remove('hidden');
     if (you !== undefined) $('capYou').textContent = you;
     if (zorb !== undefined) $('capZorb').textContent = zorb;
+    $('caption').classList.toggle('hidden', !$('capYou').textContent && !$('capZorb').textContent);
   }
 
   async function waitForSpeech() {
@@ -423,16 +423,47 @@
       $('listenBtn').setAttribute('aria-pressed', String(s !== 'off'));
       if (s === 'waiting') status('Listening for "Zorb"…');
       if (s === 'awake') { status('Zorb is listening. Ask your question!'); caption('', ''); voice.stop(); }
-      if (s === 'off') status('Listening is off.');
+      if (s === 'off') { status('Listening is off.'); if (meter.running) meter.stop(); }
+      showMic(s);
     },
     onHeard(text, isFinal) { if (listener.state === 'awake' || isFinal) caption(text, undefined); },
     onPrompt: askZorb,
     onError(msg) { status(msg); }
   });
 
+  // Live microphone waveform while listening
+  const meter = new window.AlienMicMeter($('micWave'));
+  const MIC_STATE = { waiting: 'Listening for "Zorb"', awake: 'Zorb is listening to you', busy: 'Zorb is thinking…' };
+  function showMic(s) {
+    meter.state = s;
+    $('micPanel').classList.toggle('hidden', s === 'off');
+    $('micPanel').classList.toggle('awake', s === 'awake');
+    $('micPanel').classList.toggle('busy', s === 'busy');
+    if (MIC_STATE[s]) $('micState').textContent = MIC_STATE[s];
+  }
+
+  async function startListening() {
+    try {
+      await meter.start(); // asks for microphone permission
+      $('micName').textContent = '🎤 ' + meter.deviceName;
+      $('micName').title = meter.deviceName;
+    } catch (e) {
+      status(e && e.name === 'NotAllowedError' ? 'Microphone blocked. Allow microphone access in the address bar, then try again.'
+        : e && e.name === 'NotFoundError' ? 'No microphone found.' : 'Could not open the microphone: ' + ((e && e.message) || e));
+      return;
+    }
+    listener.start();
+    showMic(listener.state);
+  }
+  function stopListening() {
+    listener.stop();
+    meter.stop();
+    showMic('off');
+  }
+
   $('listenBtn').addEventListener('click', () => {
-    if (listener.state === 'off') listener.start();
-    else listener.stop();
+    if (listener.state === 'off') startListening();
+    else stopListening();
   });
   if (!window.AlienListener.supported) {
     $('listenBtn').disabled = true;
@@ -509,6 +540,7 @@
       });
     }
 
+    alien.listenLevel = meter.running && !voice.speaking() ? meter.level : 0; // antennae glow with your voice
     alien.update(target, dt, time);
     renderer.render(scene, camera);
     requestAnimationFrame(loop);
