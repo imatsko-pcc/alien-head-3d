@@ -22,9 +22,11 @@
  * Three or more crashes in a row (until the next mission or victory) play a "streak" line.
  *
  * Control messages: 'unlock' (the player clicked in the game, so sound may
- * play; a line blocked before that is replayed) and 'mute' { muted: true|false }.
+ * play; a line blocked before that is replayed), 'mute' { muted: true|false }
+ * and 'line' { group } (say one specific line now, e.g. for a tutorial).
  * Inside an iframe Bob posts { type: 'bob-ready' }, { type: 'bob-line', text, group, file }
- * and { type: 'bob-done' } to the parent page, so the game can show its own subtitles.
+ * and { type: 'bob-done', group } to the parent page, so the game can show its own
+ * subtitles and wait for a line to finish (also when muted).
  *
  * Page options: ?transparent=1 (no background, for overlaying) and ?subtitles=0.
  */
@@ -99,6 +101,9 @@
     if (group === 'victory') return 'proud';
     if (group === 'victory3' || group === 'finale') return 'happy';
     if (group === 'idle') return 'bored';
+    if (group === 'tut_intro' || group === 'tut_win') return 'happy';
+    if (group === 'tut_launch' || group === 'tut_assist') return 'proud';
+    if (group === 'tut_skip' || group === 'tut_retry') return 'smirk';
     return 'briefing';
   }
   // Lines that may interrupt others; idle and launch chatter never interrupt
@@ -164,18 +169,29 @@
     pending = null;
     const audio = new Audio('audio/' + line.file + '.mp3');
     try { audioContext().createMediaElementSource(audio).connect(analyser); } catch (e) { /* plays without lip sync */ }
-    current = { audio, group, until: t + Math.max(3, line.text.length * 0.07) };
-    audio.addEventListener('loadedmetadata', () => { if (current && current.audio === audio) current.until = now() + audio.duration + 0.2; });
-    audio.addEventListener('ended', () => {
+    const estimate = Math.max(2.5, line.text.length * 0.065 + 0.8); // seconds, for when no audio plays
+    current = { audio, group, until: t + estimate };
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
       if (current && current.audio === audio) current = null;
       faceUntil = Math.min(faceUntil, now() + 0.8);
       subtitleUntil = Math.min(subtitleUntil, now() + 1.5);
-      tellHost({ type: 'bob-done' });
-    });
-    if (!muted) {
+      tellHost({ type: 'bob-done', group });
+    };
+    // Without sound (muted or blocked) the line still "ends", so anything waiting on it carries on
+    const silent = () => setTimeout(() => { if (current && current.audio === audio) finish(); }, estimate * 1000);
+    audio.addEventListener('loadedmetadata', () => { if (current && current.audio === audio) current.until = now() + audio.duration + 0.2; });
+    audio.addEventListener('ended', finish);
+    audio.addEventListener('pause', () => { if (current && current.audio === audio && muted) silent(); });
+    if (muted) {
+      silent();
+    } else {
       audio.play().catch((e) => {
         // Sound is blocked until the first click: keep the face and subtitle, replay the line on unlock
         if (e && e.name === 'NotAllowedError') pending = { group, line, at: now() };
+        silent();
       });
     }
 
@@ -246,6 +262,19 @@
       case 'unlock':
         unlock();
         return true;
+      case 'stop':
+        stop();
+        face = null;
+        alien.setMood('neutral');
+        subtitle.classList.remove('show');
+        return true;
+      case 'line': {
+        // Play one specific line group right now (e.g. a tutorial line), interrupting anything else
+        const line = pick(String(detail.group || ''));
+        if (!line) return false;
+        playLine(detail.group, line);
+        return true;
+      }
       case 'mute':
         setMuted(detail.muted !== false);
         return true;
