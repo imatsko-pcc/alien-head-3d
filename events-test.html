@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bob Event Tester</title>
+  <meta name="description" content="Developer page: send game events to Bob and hear his voice lines.">
+  <style>
+    :root { color-scheme: dark; --bg: #030712; --panel: #0f172a; --border: #1e293b; --text: #e2e8f0; --muted: #94a3b8; --green: #4ade80; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, sans-serif; }
+    h1 { margin: 0 0 4px; font-size: 18px; color: var(--green); }
+    p { margin: 0 0 12px; color: var(--muted); }
+    .wrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; max-width: 1100px; margin: 0 auto; }
+    iframe { width: 100%; aspect-ratio: 4 / 3; border: 1px solid var(--border); border-radius: 14px; background: #000; }
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 12px; }
+    .group { margin-bottom: 10px; }
+    .group b { display: block; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    button { font: 600 13px system-ui, sans-serif; color: var(--text); background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 6px 10px; margin: 0 4px 4px 0; cursor: pointer; }
+    button:hover { border-color: var(--green); }
+    button:focus-visible { outline: 2px solid #22d3ee; outline-offset: 2px; }
+    code { display: block; margin-top: 8px; padding: 8px; background: #020617; border-radius: 8px; color: #a5f3fc; font-size: 12px; white-space: pre-wrap; word-break: break-all; }
+    @media (max-width: 760px) { .wrap { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div>
+      <h1>Bob event tester</h1>
+      <p>For game developers. Bob has no buttons of his own; these send him the same messages the game will send.</p>
+      <iframe id="bob" src="index.html" title="Bob" allow="autoplay"></iframe>
+    </div>
+    <div class="panel" id="events">
+      <div class="group"><b>Mission loads</b>
+        <button data-e='{"event":"mission","number":1}'>1</button><button data-e='{"event":"mission","number":2}'>2</button><button data-e='{"event":"mission","number":3}'>3</button><button data-e='{"event":"mission","number":4}'>4</button><button data-e='{"event":"mission","number":5}'>5</button><button data-e='{"event":"mission","number":6}'>6</button><button data-e='{"event":"mission","number":7}'>7</button><button data-e='{"event":"mission","number":8}'>8</button>
+      </div>
+      <div class="group"><b>Crash into…</b>
+        <button data-e='{"event":"crash","body":"Earth"}'>Earth</button><button data-e='{"event":"crash","body":"Moon"}'>Moon</button><button data-e='{"event":"crash","body":"Mars"}'>Mars</button><button data-e='{"event":"crash","body":"Venus"}'>Venus</button><button data-e='{"event":"crash","body":"Jupiter"}'>Jupiter</button><button data-e='{"event":"crash","body":"Saturn"}'>Saturn</button><button data-e='{"event":"crash","body":"Neptune"}'>Neptune</button><button data-e='{"event":"crash","body":"Ganymede"}'>Other</button><button data-e='{"event":"hazard"}'>Asteroid</button>
+      </div>
+      <div class="group"><b>Other events</b>
+        <button data-e='{"event":"lost"}'>Lost in space</button><button data-e='{"event":"launch"}'>Launch</button><button data-e='{"event":"autopilot"}'>Autopilot</button><button data-e='{"event":"idle"}'>Idle</button>
+      </div>
+      <div class="group"><b>Wins</b>
+        <button data-e='{"event":"victory","stars":1}'>Victory</button><button data-e='{"event":"victory","stars":3}'>3 stars</button><button data-e='{"event":"finale"}'>Finale</button>
+      </div>
+      <p>Crash three times in a row to hear a streak line. Launch lines only play now and then, like in the game.</p>
+      <code id="call">Click an event to see the call.</code>
+    </div>
+  </div>
+  <script>
+    const frame = document.getElementById('bob');
+    document.getElementById('events').addEventListener('click', function (ev) {
+      const b = ev.target.closest('button[data-e]');
+      if (!b) return;
+      const msg = Object.assign({ type: 'bob' }, JSON.parse(b.dataset.e));
+      frame.contentWindow.postMessage(msg, '*');
+      document.getElementById('call').textContent = "bobFrame.contentWindow.postMessage(" + JSON.stringify(msg) + ", '*');";
+    });
+  </script>
+</body>
+</html>

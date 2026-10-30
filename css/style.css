@@ -1,12 +1,8 @@
 :root {
   --bg: #030712;
-  --panel: rgba(15, 23, 42, 0.78);
-  --border: rgba(51, 65, 85, 0.7);
+  --panel: rgba(15, 23, 42, 0.82);
   --green: #4ade80;
-  --cyan: #22d3ee;
   --text: #e2e8f0;
-  --muted: #94a3b8;
-  --display: 'Orbitron', system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -23,130 +19,35 @@ html, body {
     linear-gradient(#02040b, #060b1a);
   background-color: var(--bg);
 }
+/* ?transparent=1: no background, for overlaying Bob on a game */
+html.transparent, html.transparent body { background: transparent; }
 
 #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 
-.top, .bottom {
+.subtitle {
   position: fixed;
-  left: 0; right: 0;
-  z-index: 2;
-  padding: 16px;
+  left: 50%;
+  bottom: 16px;
+  transform: translate(-50%, 8px);
+  width: max-content;
+  max-width: min(640px, calc(100vw - 32px));
+  margin: 0;
+  padding: 10px 18px;
+  font-size: clamp(14px, 2.4vw, 18px);
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  border-radius: 14px;
+  box-shadow: 0 0 22px rgba(74, 222, 128, 0.18);
+  opacity: 0;
+  transition: opacity 0.25s, transform 0.25s;
   pointer-events: none;
 }
-.top > *, .bottom > * { pointer-events: auto; }
-.top { top: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
-.bottom { bottom: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.subtitle.show { opacity: 1; transform: translate(-50%, 0); }
+.subtitle:empty { display: none; }
 
-.brand h1 { margin: 0; font-family: var(--display); font-weight: 900; font-size: 20px; letter-spacing: 0.18em; color: var(--green); }
-.brand h1 span { color: var(--cyan); }
-.brand p { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
-
-
-.panel {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 14px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.btn {
-  font: 600 13px 'Inter', system-ui, sans-serif;
-  color: #cbd5e1;
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 10px;
-  padding: 9px 14px;
-  cursor: pointer;
-}
-.btn:hover { background: #273449; color: #fff; }
-.btn:disabled { opacity: 0.5; cursor: wait; }
-.btn.primary { color: #052e16; background: linear-gradient(90deg, #4ade80, #22d3ee); border: none; }
-.btn.primary:hover { background: linear-gradient(90deg, #86efac, #67e8f9); }
-.btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
-
-.status { margin: 0; font-size: 13px; color: #a5f3fc; max-width: 520px; }
-.privacy { margin: 0; font-size: 11px; color: var(--muted); }
-
-.preview {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 3;
-  width: 180px;
-  border-radius: 12px;
-  border: 1px solid rgba(74, 222, 128, 0.5);
-  transform: scaleX(-1);
-}
-.hidden { display: none; }
-
-.say { flex-wrap: nowrap; width: min(560px, 100%); }
-.caption { flex-direction: column; flex-wrap: nowrap; gap: 4px; width: min(560px, 100%); padding: 8px 14px; text-align: left; font-size: 14px; }
-.caption.hidden { display: none; }
-.caption p { margin: 0; }
-.cap-you { color: var(--muted); }
-.cap-you:not(:empty)::before { content: 'You: '; color: #67e8f9; font-weight: 600; }
-.cap-bob:not(:empty)::before { content: 'Bob: '; color: var(--green); font-weight: 600; }
-.vp-sub { margin-top: 8px; padding-top: 10px; border-top: 1px solid #334155; }
-.say input {
-  flex: 1;
-  min-width: 0;
-  font: 14px 'Inter', system-ui, sans-serif;
-  color: var(--text);
-  background: #020617;
-  border: 1px solid #334155;
-  border-radius: 10px;
-  padding: 9px 12px;
-}
-.say input:focus { outline: 2px solid var(--cyan); outline-offset: 1px; }
-
-.voice-panel {
-  position: fixed;
-  right: 16px;
-  top: 70px;
-  z-index: 4;
-  width: 290px;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 230px);
-  overflow-y: auto;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-  gap: 9px;
-  padding: 14px;
-  font-size: 11px;
-  color: var(--muted);
-  border-color: rgba(74, 222, 128, 0.45);
-}
-.voice-panel.hidden { display: none; }
-.vp-head { display: flex; justify-content: space-between; align-items: center; font-family: var(--display); font-size: 12px; letter-spacing: 0.12em; color: var(--green); }
-.vp-x { background: none; border: none; color: var(--muted); font-size: 14px; cursor: pointer; }
-.vp-x:hover { color: #fff; }
-.voice-panel label { display: flex; flex-direction: column; gap: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
-.voice-panel label.v-check { flex-direction: row; align-items: center; gap: 7px; text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--text); }
-.voice-panel label.v-slider { flex-direction: row; flex-wrap: wrap; justify-content: space-between; }
-.voice-panel output { color: #67e8f9; }
-.v-key { display: flex; flex-direction: column; gap: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
-.v-key-row { display: flex; gap: 6px; }
-.v-key-row input { flex: 1; -webkit-text-security: disc; }
-.v-key-row input:focus { -webkit-text-security: none; }
-.v-key-row .btn { padding: 6px 10px; font-size: 12px; white-space: nowrap; }
-.voice-panel select, .voice-panel input[type="text"] {
-  font: 13px 'Inter', system-ui, sans-serif; color: var(--text); background: #020617;
-  border: 1px solid #334155; border-radius: 8px; padding: 6px 8px; text-transform: none; min-width: 0;
-}
-.voice-panel input[type="range"] { width: 100%; margin: 0; accent-color: #4ade80; }
-.voice-panel input[type="checkbox"] { accent-color: #4ade80; }
-.v-status { margin: 0; min-height: 15px; color: #fcd34d; }
-.v-fine { margin: 0; font-size: 10px; line-height: 1.45; }
-
-@media (max-width: 600px) {
-  .brand h1 { font-size: 16px; }
-  .brand p { display: none; }
-  .preview { width: 110px; top: 70px; bottom: auto; }
+@media (prefers-reduced-motion: reduce) {
+  .subtitle { transition: none; }
 }

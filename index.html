@@ -4,102 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Alien Head 3D</title>
-  <meta name="description" content="A 3D alien head that copies your facial expressions through your webcam.">
+  <meta name="description" content="Bob, a 3D alien head that speaks voice lines when game events happen.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=13">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20">
 </head>
 <body>
-  <canvas id="scene" aria-label="3D alien head"></canvas>
-
-  <header class="top">
-    <div class="brand">
-      <h1>ALIEN HEAD <span>3D</span></h1>
-      <p>Make a face. The alien makes it too.</p>
-    </div>
-  </header>
-
-  <footer class="bottom">
-    <div class="panel controls">
-      <button id="camBtn" class="btn primary">Start camera</button>
-      <button id="mirrorBtn" class="btn" title="Mirror: your left side shows on the left">Mirror: on</button>
-      <button id="previewBtn" class="btn" title="Show your camera picture">Preview: off</button>
-      <button id="muteBtn" class="btn" title="Alien voice on/off">🔊 Voice: on</button>
-      <button id="voiceBtn" class="btn" title="Voice and AI settings">⚙ Settings</button>
-    </div>
-    <div id="caption" class="panel caption hidden" aria-live="polite">
-      <p id="capYou" class="cap-you"></p>
-      <p id="capBob" class="cap-bob"></p>
-    </div>
-    <form id="sayForm" class="panel say" autocomplete="off">
-      <input id="sayText" type="text" maxlength="300" placeholder="Ask Bob something, or type words for it to say…" aria-label="Question for Bob, or text for it to say">
-      <button id="askBtn" class="btn primary" type="submit">Ask Bob</button>
-      <button id="sayBtn" class="btn" type="button">Say it</button>
-    </form>
-    <p id="status" class="status">Type a question and press Ask Bob. Start the camera and Bob copies your face.</p>
-    <p class="privacy">Your video stays on this device. Face tracking runs in your browser.</p>
-  </footer>
-
-  <video id="video" class="preview hidden" playsinline muted></video>
-
-  <form id="voicePanel" class="panel voice-panel hidden" autocomplete="off" aria-label="Voice settings">
-    <div class="vp-head"><b>VOICE SETTINGS</b><button type="button" id="vClose" class="vp-x" aria-label="Close">✕</button></div>
-    <label class="v-check"><input type="checkbox" id="vOn"> Alien talks</label>
-    <label class="v-check"><input type="checkbox" id="vReact"> React out loud to my expressions</label>
-    <label>Character
-      <select id="vPreset">
-        <option value="squeaky">👽 Squeaky alien</option>
-        <option value="warrior">⚔️ Warrior alien (Klingon-style)</option>
-        <option value="robot">🤖 Robot alien</option>
-        <option value="custom">🎛️ Custom</option>
-      </select>
-    </label>
-    <label>Voice engine
-      <select id="vEngine">
-        <option value="eleven">ElevenLabs</option>
-        <option value="browser">Browser voice (free)</option>
-      </select>
-    </label>
-    <div id="vKeyRow" class="v-key">
-      <label for="vKey">ElevenLabs API key</label>
-      <div class="v-key-row">
-        <input type="text" id="vKey" placeholder="Paste your key (sk_…)" spellcheck="false" autocapitalize="off" autocorrect="off" data-lpignore="true" data-1p-ignore>
-        <button type="button" id="vKeySave" class="btn">Save key</button>
-      </div>
-    </div>
-    <label id="vVoiceRow">Voice <select id="vVoice"><option value="">Add a key to load voices</option></select></label>
-    <label>Effect (ElevenLabs only)
-      <select id="vEffect">
-        <option value="none">None</option>
-        <option value="growl">Warrior growl</option>
-        <option value="robot">Robot</option>
-      </select>
-    </label>
-    <label class="v-slider">Pitch <output id="vPitchOut"></output><input type="range" id="vPitch" min="0.6" max="2" step="0.05"></label>
-    <label class="v-slider">Speed <output id="vSpeedOut"></output><input type="range" id="vSpeed" min="0.6" max="1.6" step="0.05"></label>
-    <label class="v-slider">Volume <output id="vVolOut"></output><input type="range" id="vVol" min="0" max="1" step="0.05"></label>
-    <button type="button" id="vTest" class="btn primary">Test voice</button>
-    <p id="vStatus" class="v-status"></p>
-    <p class="v-fine">Your key is saved only in this browser and sent only to ElevenLabs. Never put it in the code or on GitHub.</p>
-
-    <div class="vp-head vp-sub"><b>BOB'S BRAIN (CLAUDE)</b></div>
-    <div class="v-key">
-      <label for="bKey">Claude API key (for answers)</label>
-      <div class="v-key-row">
-        <input type="text" id="bKey" placeholder="Paste your key (sk-ant-…)" spellcheck="false" autocapitalize="off" autocorrect="off" data-lpignore="true" data-1p-ignore>
-        <button type="button" id="bKeySave" class="btn">Save key</button>
-      </div>
-    </div>
-    <button type="button" id="bNew" class="btn">New conversation</button>
-    <p id="bStatus" class="v-status"></p>
-    <p class="v-fine">Get a key at console.anthropic.com. It is saved only in this browser and sent only to Anthropic, and answers use your Anthropic credits. Without a key Bob knows only a few things (time, date, jokes).</p>
-  </form>
+  <canvas id="scene" aria-label="Bob, a 3D alien head"></canvas>
+  <p id="subtitle" class="subtitle" role="status" aria-live="polite"></p>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-  <script src="js/alien-head.js?v=13"></script>
-  <script src="js/face-tracker.js?v=13"></script>
-  <script src="js/voice.js?v=13"></script>
-  <script src="js/brain.js?v=13"></script>
-  <script src="js/main.js?v=13"></script>
+  <script src="js/alien-head.js?v=20"></script>
+  <script src="js/lines.js?v=20"></script>
+  <script src="js/bob.js?v=20"></script>
 </body>
 </html>

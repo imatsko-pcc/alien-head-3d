@@ -1,70 +1,74 @@
-# Alien Head 3D
+# Alien Head 3D: Bob
 
-A 3D alien head that copies your face. Turn on your webcam and it blinks, smiles, frowns, raises its brow ridges, opens its mouth, puckers, puffs its cheeks and turns its head when you do. Its antennae wobble when you move and glow a different color for each mood (happy, surprised, grumpy, sad, kissy, wink, puffed up).
+Bob is a 3D alien head (three.js) who commentates a space game. He has no buttons and takes no input: he floats, blinks and looks around on his own, and **speaks only when the game tells him something happened**. Each event plays one of 45 pre-recorded voice lines (MP3s in `audio/`) with his mouth moving to the audio, a matching face and a subtitle.
 
-It also **talks** in a high-pitched voice: it greets you, reacts out loud to your expressions ("Ooh, a smile!"), and says anything you type into the box. Its mouth moves with the words.
+The voice is ElevenLabs "Jessica", pitched up 1.5x into Bob's squeaky alien voice, baked into the MP3s. No API keys or internet services are needed to play them.
 
-Its name is **Bob**, and you can **ask it anything**: type a question, press **Ask Bob**, and Bob answers out loud using Claude.
+## Events
 
-No camera? It runs a demo of its expressions and follows your mouse.
+| Event | Bob says | Face |
+| --- | --- | --- |
+| `mission` `{ number: 1-8 }` | that mission's briefing | attentive |
+| `crash` `{ body: 'Earth' }` | an Earth crash line | smirk |
+| `crash` `{ body: 'Moon' / 'Mars' / 'Venus' / 'Jupiter' / 'Saturn' / 'Neptune' }` | a line about that body | smirk |
+| `crash` `{ body: <anything else> }` | a general planet/moon crash line | smirk |
+| `hazard` (or `crash` with `hazard: true`, or a body named like an asteroid/debris/junk/rock) | an asteroid/debris line | smirk |
+| `lost` | a lost-in-deep-space line | smirk |
+| 3rd crash in a row (and every other one after, until the next mission or victory) | a streak line instead | smirk |
+| `launch` | a launch line, only now and then (35% chance, at most every 20 s) | surprised |
+| `autopilot` | an autopilot line | smirk |
+| `victory` `{ stars: 1-2 }` | a victory line | proud |
+| `victory` `{ stars: 3 }` | a 3-star line | happy |
+| `finale` | the final win line | happy |
+| `idle` | an idle line (never interrupts anything) | bored |
 
-## Asking Bob
+Bob picks a random line in each group and never repeats the one he just said. A new event interrupts the current line unless it is less important (idle < launch/autopilot < everything else).
 
-1. Click **⚙ Settings** and, under **Bob's brain (Claude)**, paste a Claude API key from console.anthropic.com and press **Save key**. It is saved only in your browser and sent only to Anthropic; answers use your Anthropic credits. Without a key, Bob only knows the time, the date and a few jokes.
-2. Type your question in the box at the bottom and press **Ask Bob** (or Enter). Its antennae turn purple while it thinks, then it answers with its voice. Your question and its answer show in the caption. **Say it** just makes Bob read out what you typed.
+## Using Bob in the game
 
-- Bob answers with Claude Opus 5.5 (`claude-opus-5-5`, low effort for quick replies), in short spoken sentences, in the character you picked (squeaky, warrior or robot). It remembers the conversation until you press **New conversation**.
-- If Claude's safety filter declines a question, a fallback model answers instead (server-side fallback is turned on); if that also declines, Bob says it can't help with that.
+**In the same page:** load the scripts and call `AlienBob.event(...)`:
 
-## Run it
+```html
+<canvas id="scene"></canvas>
+<p id="subtitle" class="subtitle"></p>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script src="js/alien-head.js"></script>
+<script src="js/lines.js"></script>
+<script src="js/bob.js"></script>
+```
 
-Plain HTML, CSS and JavaScript. No install and no build step.
+```js
+AlienBob.event('mission', { number: 3 });
+AlienBob.event('crash', { body: 'Moon' });
+AlienBob.event('victory', { stars: 3 });
+```
 
-Browsers only allow the camera on `https://` pages or on `localhost`, so:
+**In an iframe (easiest):** put Bob in a corner of the game and send him messages:
 
-- **GitHub Pages (easiest to share):** repo → **Settings** → **Pages** → deploy from the `main` branch, `/ (root)`. Open the link it gives you.
-- **VS Code:** install the **Live Server** extension, right-click `index.html` → **Open with Live Server**.
-- **Double-click `index.html`:** the demo always works. Chrome usually allows the camera from a local file too; if it doesn't, use one of the options above.
+```html
+<iframe id="bob" src="alien-head-3d/index.html?transparent=1" allow="autoplay" title="Bob"></iframe>
+```
 
-Click **Start camera** and allow access. The first time, the face tracker downloads about 13 MB.
+```js
+const bob = document.getElementById('bob').contentWindow;
+bob.postMessage({ type: 'bob', event: 'crash', body: 'Moon' }, '*');
+bob.postMessage({ type: 'bob', event: 'mission', number: 3 }, '*');
+```
 
-## Controls
+Page options: `?transparent=1` removes the background so Bob floats over the game, `?subtitles=0` hides the subtitles.
 
-| Button | What it does |
-| --- | --- |
-| **Start / Stop camera** | Turns face tracking on or off |
-| **Mirror** | On: the alien acts like your reflection (wink your left eye, its eye on the left closes). Off: it faces you like another person would |
-| **Preview** | Shows your camera picture in the corner |
-| **Voice: on / off** | Mutes or unmutes the alien |
-| **Voice settings** | Voice engine, ElevenLabs key and voice, pitch, speed, volume, and whether it reacts to your expressions |
-| **Speak** | The alien says whatever you typed (up to 300 characters) |
+**Sound needs one click first.** Browsers block audio until the player has clicked or pressed a key on the page (the game's first click counts; keep `allow="autoplay"` on the iframe). Before that, Bob still shows the face and subtitle.
 
-## The voice
+**Try it:** open `events-test.html`, a developer page with a button for every event that shows the exact `postMessage` call.
 
-- **ElevenLabs** (natural voices, uses your ElevenLabs credits): create an API key at elevenlabs.io → *Developers → API Keys* (a key limited to Text to Speech is safest) and paste it into **Voice settings**. Your voices load into the list. The key is saved only in your browser and sent only to ElevenLabs. **Never put the key in the code or commit it to GitHub.**
-- **Browser voice** (free): used when there is no ElevenLabs key.
-- **High pitch:** ElevenLabs has no pitch control, so the page asks it for slower speech and plays it back faster, which raises the pitch while keeping your chosen speed.
-- **Lip sync:** the mouth follows the loudness of the ElevenLabs audio. The browser voice can't be measured, so the mouth just flaps while it talks.
-- Each line is generated once per voice setting and reused, so repeated reactions don't cost extra credits.
-
-## Privacy
-
-Your video never leaves your computer. Face tracking runs inside the browser with WebAssembly. The page only downloads the tracking library and model; it never uploads anything.
-
-## How it works
-
-- **Face tracking (`js/face-tracker.js`)**: [MediaPipe Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker) gives 52 expression scores per frame (`eyeBlinkLeft`, `mouthSmileRight`, `jawOpen`, `browInnerUp`, ...) plus a head-pose matrix. Instead of trusting which side "Left" means, it checks the blink scores against how open each eye actually is in the picture.
-- **Mapping (`js/main.js`)**: turns those scores into the alien's expression channels and head turn, flipping sides for mirror mode, and picks a mood from them.
-- **The alien (`js/alien-head.js`)**: built from [three.js](https://threejs.org) shapes. The skull is a stretched sphere, the eyes are squashed to blink, and the lips are rebuilt every frame from the expression. Everything is smoothed so it moves naturally.
-
-## Project structure
+## Files
 
 ```
-index.html            page and buttons
-css/style.css         styles
-js/alien-head.js      the 3D alien and its expressions
-js/face-tracker.js    webcam + MediaPipe face tracking
-js/voice.js           the alien's voice (ElevenLabs or browser speech) and lip sync
-js/brain.js           Bob's answers (Claude, via the Anthropic SDK in the browser)
-js/main.js            scene, demo mode, face-to-alien mapping, reactions
+index.html          Bob (no controls)
+events-test.html    developer page: send events to Bob
+css/style.css       styles
+js/alien-head.js    the 3D alien head and its expressions
+js/lines.js         every voice line, grouped by event
+js/bob.js           scene, idle animation, events, MP3 playback with lip sync
+audio/*.mp3         the 45 voice lines
 ```
