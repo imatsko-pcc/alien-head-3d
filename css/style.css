@@ -112,7 +112,7 @@ html, body {
 .caption p { margin: 0; }
 .cap-you { color: var(--muted); }
 .cap-you:not(:empty)::before { content: 'You: '; color: #67e8f9; font-weight: 600; }
-.cap-zorb:not(:empty)::before { content: 'Zorb: '; color: var(--green); font-weight: 600; }
+.cap-bob:not(:empty)::before { content: 'Bob: '; color: var(--green); font-weight: 600; }
 #listenBtn.on { color: #052e16; background: linear-gradient(90deg, #4ade80, #22d3ee); border: none; }
 #listenBtn.awake { animation: listenPulse 0.9s infinite; }
 @keyframes listenPulse { 50% { box-shadow: 0 0 18px rgba(74, 222, 128, 0.9); } }

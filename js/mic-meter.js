@@ -10,7 +10,7 @@
   'use strict';
 
   const COLORS = {
-    waiting: [34, 211, 238],   // listening for "Zorb"
+    waiting: [34, 211, 238],   // listening for "Bob"
     awake: [74, 222, 128],     // listening for the question
     busy: [168, 85, 247],      // thinking / answering
     off: [100, 116, 139]

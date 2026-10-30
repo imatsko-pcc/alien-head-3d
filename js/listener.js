@@ -1,9 +1,9 @@
 /*
- * Alien Head 3D — listening for "Zorb"
+ * Alien Head 3D — listening for "Bob"
  *
  * Uses the browser's speech recognition (Chrome, Edge, Safari) on the
- * microphone. While listening it waits for the wake word "Zorb"; after
- * hearing it, the next thing you say becomes the prompt. "Zorb, what time
+ * microphone. While listening it waits for the wake word "Bob"; after
+ * hearing it, the next thing you say becomes the prompt. "Bob, what time
  * is it?" in one breath works too.
  *
  * Note: in Chrome, speech recognition is done by Google's speech service,
@@ -13,8 +13,8 @@
   'use strict';
 
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  // "Zorb" plus the ways speech recognition tends to mishear it
-  const WAKE = /\b(zorb|zorbs|zorb's|zorp|zorbe|zorba|zorg|zorbo|sorb|soarb|zoreb|zor b|zob)\b[\s,.!?]*/i;
+  // "Bob" (also "hey Bob") plus the ways speech recognition tends to mishear it
+  const WAKE = /\b(bob|bob's|bobs|bobb|bobby|bobbie|bop|bub)\b[\s,.!?]*/i;
   const AWAKE_TIMEOUT = 8000;
 
   function chirp(up) {
@@ -40,7 +40,7 @@
     /**
      * opts: onState(state), onHeard(text, isFinal), onPrompt(text) -> Promise,
      *       onError(message), isSpeaking() -> bool
-     * States: 'off', 'waiting' (for "Zorb"), 'awake' (for a prompt), 'busy' (answering)
+     * States: 'off', 'waiting' (for "Bob"), 'awake' (for a prompt), 'busy' (answering)
      */
     constructor(opts) {
       this.opts = opts;

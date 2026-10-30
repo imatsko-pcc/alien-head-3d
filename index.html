@@ -7,7 +7,7 @@
   <meta name="description" content="A 3D alien head that copies your facial expressions through your webcam.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body>
   <canvas id="scene" aria-label="3D alien head"></canvas>
@@ -25,28 +25,28 @@
       <button id="camBtn" class="btn primary">Start camera</button>
       <button id="mirrorBtn" class="btn" title="Mirror: your left side shows on the left">Mirror: on</button>
       <button id="previewBtn" class="btn" title="Show your camera picture">Preview: off</button>
-      <button id="listenBtn" class="btn" title="Listen on the microphone for &quot;Zorb&quot;" aria-pressed="false">🎤 Listen: off</button>
+      <button id="listenBtn" class="btn" title="Listen on the microphone for &quot;Bob&quot;" aria-pressed="false">🎤 Listen: off</button>
       <button id="muteBtn" class="btn" title="Alien voice on/off">🔊 Voice: on</button>
       <button id="voiceBtn" class="btn" title="Voice and AI settings">⚙ Settings</button>
     </div>
     <div id="micPanel" class="panel mic hidden">
       <div class="mic-head">
         <span class="mic-dot" aria-hidden="true"></span>
-        <span id="micState" class="mic-state">Listening for "Zorb"</span>
+        <span id="micState" class="mic-state">Listening for "Bob"</span>
         <span id="micName" class="mic-name"></span>
       </div>
       <canvas id="micWave" class="mic-wave" aria-label="Live microphone waveform" role="img"></canvas>
     </div>
     <div id="caption" class="panel caption hidden" aria-live="polite">
       <p id="capYou" class="cap-you"></p>
-      <p id="capZorb" class="cap-zorb"></p>
+      <p id="capBob" class="cap-bob"></p>
     </div>
     <form id="sayForm" class="panel say" autocomplete="off">
-      <input id="sayText" type="text" maxlength="300" placeholder="Ask Zorb something, or type words for it to say…" aria-label="Question for Zorb, or text for it to say">
-      <button id="askBtn" class="btn primary" type="submit">Ask Zorb</button>
+      <input id="sayText" type="text" maxlength="300" placeholder="Ask Bob something, or type words for it to say…" aria-label="Question for Bob, or text for it to say">
+      <button id="askBtn" class="btn primary" type="submit">Ask Bob</button>
       <button id="sayBtn" class="btn" type="button">Say it</button>
     </form>
-    <p id="status" class="status">Demo mode. Start the camera and the alien copies your face. Turn on Listen and say "Zorb" to talk to it.</p>
+    <p id="status" class="status">Demo mode. Start the camera and the alien copies your face. Turn on Listen and say "Bob" to talk to it.</p>
     <p class="privacy">Your video stays on this device. Face tracking runs in your browser.</p>
   </footer>
 
@@ -92,7 +92,7 @@
     <p id="vStatus" class="v-status"></p>
     <p class="v-fine">Your key is saved only in this browser and sent only to ElevenLabs. Never put it in the code or on GitHub.</p>
 
-    <div class="vp-head vp-sub"><b>ZORB'S BRAIN (CLAUDE)</b></div>
+    <div class="vp-head vp-sub"><b>BOB'S BRAIN (CLAUDE)</b></div>
     <div class="v-key">
       <label for="bKey">Claude API key (for answers)</label>
       <div class="v-key-row">
@@ -102,17 +102,17 @@
     </div>
     <button type="button" id="bNew" class="btn">New conversation</button>
     <p id="bStatus" class="v-status"></p>
-    <p class="v-fine">Get a key at console.anthropic.com. It is saved only in this browser and sent only to Anthropic, and answers use your Anthropic credits. Without a key Zorb knows only a few things (time, date, jokes).</p>
+    <p class="v-fine">Get a key at console.anthropic.com. It is saved only in this browser and sent only to Anthropic, and answers use your Anthropic credits. Without a key Bob knows only a few things (time, date, jokes).</p>
     <p class="v-fine">Listening uses your browser's speech recognition. In Chrome that sends microphone audio to Google's speech service while Listen is on.</p>
   </form>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-  <script src="js/alien-head.js?v=9"></script>
-  <script src="js/face-tracker.js?v=9"></script>
-  <script src="js/voice.js?v=9"></script>
-  <script src="js/brain.js?v=9"></script>
-  <script src="js/listener.js?v=9"></script>
-  <script src="js/mic-meter.js?v=9"></script>
-  <script src="js/main.js?v=9"></script>
+  <script src="js/alien-head.js?v=10"></script>
+  <script src="js/face-tracker.js?v=10"></script>
+  <script src="js/voice.js?v=10"></script>
+  <script src="js/brain.js?v=10"></script>
+  <script src="js/listener.js?v=10"></script>
+  <script src="js/mic-meter.js?v=10"></script>
+  <script src="js/main.js?v=10"></script>
 </body>
 </html>

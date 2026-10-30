@@ -1,10 +1,10 @@
 /*
- * Alien Head 3D — Zorb's brain (Claude)
+ * Alien Head 3D — Bob's brain (Claude)
  *
- * Answers what you ask Zorb using the Anthropic TypeScript SDK, loaded in the
+ * Answers what you ask Bob using the Anthropic TypeScript SDK, loaded in the
  * browser from a CDN. The player pastes their own Claude API key into the
  * settings; it is kept only in this browser (localStorage) and sent only to
- * api.anthropic.com. Without a key, Zorb falls back to a few built-in answers.
+ * api.anthropic.com. Without a key, Bob falls back to a few built-in answers.
  */
 (function () {
   'use strict';
@@ -30,7 +30,7 @@
 
   function systemPrompt(persona) {
     return [
-      'You are Zorb, a small green 3D alien head that lives on a web page and talks to the person in front of the screen through their speakers.',
+      'You are Bob, a small green 3D alien head that lives on a web page and talks to the person in front of the screen through their speakers.',
       PERSONAS[persona] || PERSONAS.custom,
       'Everything you write is read aloud by a text-to-speech voice, so answer in plain spoken sentences: no markdown, lists, code, emoji, links or symbols that do not read well aloud.',
       'Keep answers short: one to three sentences unless the person asks for more.',
@@ -63,7 +63,7 @@
     if (/\b(time)\b/.test(t)) return 'It is ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ' on planet Earth.';
     if (/\b(date|day is it|today)\b/.test(t)) return 'Today is ' + new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' }) + '.';
     if (/\bjoke\b/.test(t)) return JOKES[Math.floor(Math.random() * JOKES.length)];
-    if (/\b(your name|who are you)\b/.test(t)) return "I'm Zorb, your alien friend!";
+    if (/\b(your name|who are you)\b/.test(t)) return "I'm Bob, your alien friend!";
     if (/\b(hello|hi|hey)\b/.test(t)) return 'Hello, Earthling!';
     return null;
   }
@@ -80,7 +80,7 @@
   }
 
   /**
-   * Ask Zorb something. Resolves to { text, mood, error? }.
+   * Ask Bob something. Resolves to { text, mood, error? }.
    */
   async function ask(text, persona) {
     const prompt = String(text || '').trim();
